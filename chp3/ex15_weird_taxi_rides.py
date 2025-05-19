@@ -14,6 +14,35 @@ def get_data() -> DataFrame:
                      )
     return df
 
+def amount_paid_for_long_distances(df: DataFrame):
+    return (df.sort_values('trip_distance', ascending=False)['total_amount']
+            .head(5)
+            .mean()
+            )
+
+def group_payment_type(df: DataFrame):
+    """
+    avg passenger count
+    avg trip distance
+    total amount paid
+    :param df:
+    :return:
+    """
+    return df.groupby('payment_type').agg(
+        avg_passengers = ('passenger_count', 'mean'),
+        avg_trip_distance = ('trip_distance', 'mean'),
+        sum_amount = ('total_amount', 'sum')
+    )
+
+
+def amount_charged_by_riders(df: DataFrame):
+    return (
+        df.groupby('passenger_count')['total_amount']
+        .agg(['sum', 'mean'])
+        .round(0)
+            )
+
+
 def eight_passengers():
     df = get_data()
     count_passengers = df.loc[df['passenger_count'] > 3,'passenger_count'].count()
@@ -34,6 +63,24 @@ def get_corr():
     df = get_data()
     return df.corr()
 
+def sort_trip_distance(df: DataFrame):
+    return df.groupby('payment_type')['total_amount'].mean().sort_values()
+
+def label_distance_range(df: DataFrame):
+    df['distance_range'] = pd.cut(df['passenger_count'],
+                                  bins=[df['passenger_count'].min(), 2, 5, df['passenger_count'].max()],
+                                  labels=['short', 'mid', 'long'],
+                                  include_lowest= True)
+    return df
+
 
 if __name__ == '__main__':
-    print(payment_over_1000())
+    df = get_data()
+    # print(amount_paid_for_long_distances(df))
+    # print(amount_charged_by_riders(df))
+
+    # df2 =  group_payment_type(df)
+    # print(df2.rank(method="dense", na_option="bottom"))
+
+    # print(sort_trip_distance(df))
+    print(label_distance_range(df))
